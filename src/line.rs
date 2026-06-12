@@ -2,22 +2,6 @@ static LINE_COLOR: Color = Color::new(255, 0, 0);
 
 use crate::common::*;
 
-#[derive(Clone, Copy)]
-#[derive(Debug)]
-pub struct Vec2 {
-    pub x: isize,
-    pub y: isize,
-}
-
-impl Vec2 {
-    pub fn add(self, other: Self) -> Self {
-        Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
 pub fn render_line(buf: &mut Screen, p0: Vec2, p1: Vec2) { // Pretty much direct translation from https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     if (p1.y - p0.y).abs() < (p1.x - p0.x).abs() {
         if p0.x > p1.x {

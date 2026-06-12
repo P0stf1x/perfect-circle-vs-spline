@@ -1,7 +1,6 @@
 use std::fs;
 use std::io::Write;
 
-use crate::line::Vec2;
 use crate::{ WIDTH, HEIGHT, };
 
 #[derive(Clone, Copy)]
@@ -80,5 +79,21 @@ pub fn pol2cart(r: f64, th: f64) -> Vec2 {
     return Vec2 {
         x: (r * th.cos()) as isize,
         y: (r * th.sin()) as isize,
+    }
+}
+
+#[derive(Clone, Copy)]
+#[derive(Debug)]
+pub struct Vec2 {
+    pub x: isize,
+    pub y: isize,
+}
+
+impl Vec2 {
+    pub fn add(self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
     }
 }
