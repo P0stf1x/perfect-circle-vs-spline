@@ -77,16 +77,16 @@ impl Screen {
 
 pub fn pol2cart(r: f64, th: f64) -> Vec2 {
     return Vec2 {
-        x: (r * th.cos()) as isize,
-        y: (r * th.sin()) as isize,
+        x: (r * th.cos()),
+        y: (r * th.sin()),
     }
 }
 
 #[derive(Clone, Copy)]
 #[derive(Debug)]
 pub struct Vec2 {
-    pub x: isize,
-    pub y: isize,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Vec2 {
@@ -94,6 +94,33 @@ impl Vec2 {
         Self {
             x: self.x + other.x,
             y: self.y + other.y,
+        }
+    }
+
+    pub fn sub(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+#[derive(Debug)]
+pub struct Bezier {
+    pub p0: Vec2,
+    pub p1: Vec2,
+    pub p2: Vec2,
+    pub p3: Vec2,
+}
+
+impl Bezier {
+    pub fn offset(self, other: Vec2) -> Self {
+        Self {
+            p0: self.p0.add(other),
+            p1: self.p1.add(other),
+            p2: self.p2.add(other),
+            p3: self.p3.add(other),
         }
     }
 }
