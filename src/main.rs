@@ -10,6 +10,7 @@ mod common;
 mod text;
 mod line;
 mod bezier;
+mod flood_fill;
 
 use std::f64::consts::TAU;
 
@@ -17,6 +18,7 @@ use crate::common::*;
 use crate::text::render_text;
 use crate::line::*;
 use crate::bezier::*;
+use crate::flood_fill::*;
 
 fn main() {
     let mut screen = Screen::new();
@@ -45,7 +47,8 @@ fn main() {
             p2: spline_points[0],
             p3: spline_points[0],
         });
-    render_connected_beziers(&mut screen, beziers);
+    render_connected_lines(&mut screen, spline_points, true, false);
+    // render_connected_beziers(&mut screen, beziers);
     let test_bez = Bezier {
 
         p0: Vec2 { x: -150., y:  25.},
@@ -53,8 +56,9 @@ fn main() {
         p2: Vec2 { x:   50., y:  75.},
         p3: Vec2 { x:  150., y: -25.},
     };
-    render_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
-    debug_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
+    // render_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
+    // debug_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
+    flood_fill(&mut screen, WIDTH/2, HEIGHT/2);
 
     screen.render_to_file("result.ppm".to_string());
 }
