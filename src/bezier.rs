@@ -55,15 +55,6 @@ fn get_bezier_points(b: Bezier) -> Vec<Vec2> {
     return result;
 }
 
-fn lerp(p0: Vec2, p1: Vec2, t: f64) -> Vec2 {
-    let diff = p1.sub(p0);
-    let result = Vec2 {
-        x: p0.x + (diff.x as f64 * (1.-t)),
-        y: p0.y + (diff.y as f64 * (1.-t)),
-    };
-    return result;
-}
-
 pub fn render_connected_beziers(buf: &mut Screen, points: Vec<Bezier>) {
     for i in 0..points.len() {
         render_bezier(buf, points[i]);

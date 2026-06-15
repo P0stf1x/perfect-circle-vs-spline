@@ -123,4 +123,19 @@ impl Bezier {
             p3: self.p3.add(other),
         }
     }
+
+    pub fn from_line(p0: Vec2, p3: Vec2) -> Self {
+        let p1 = lerp(p0, p3, 1./3.);
+        let p2 = lerp(p0, p3, 2./3.);
+        return Self { p0, p1, p2, p3 };
+    }
+}
+
+pub fn lerp(p0: Vec2, p1: Vec2, t: f64) -> Vec2 {
+    let diff = p1.sub(p0);
+    let result = Vec2 {
+        x: p0.x + (diff.x as f64 * (1.-t)),
+        y: p0.y + (diff.y as f64 * (1.-t)),
+    };
+    return result;
 }

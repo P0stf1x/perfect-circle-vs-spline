@@ -34,21 +34,15 @@ fn main() {
     }
     let mut beziers = Vec::<Bezier>::with_capacity(SPLINE_NODES);
     for i in 0..SPLINE_NODES-1 {
-        beziers.push(Bezier {
-            p0: spline_points[i],
-            p1: spline_points[i],
-            p2: spline_points[i+1],
-            p3: spline_points[i+1],
-        });
+        beziers.push(
+            Bezier::from_line(spline_points[i], spline_points[i+1])
+        );
     }
-    beziers.push(Bezier {
-            p0: spline_points[SPLINE_NODES-1],
-            p1: spline_points[SPLINE_NODES-1],
-            p2: spline_points[0],
-            p3: spline_points[0],
-        });
-    render_connected_lines(&mut screen, spline_points, true, false);
-    // render_connected_beziers(&mut screen, beziers);
+    beziers.push(
+        Bezier::from_line(spline_points[SPLINE_NODES-1], spline_points[0])
+    );
+    // render_connected_lines(&mut screen, spline_points, true, false);
+    render_connected_beziers(&mut screen, beziers);
     let test_bez = Bezier {
 
         p0: Vec2 { x: -150., y:  25.},
