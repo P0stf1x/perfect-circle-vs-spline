@@ -1,5 +1,3 @@
-static LINE_COLOR: Color = Color::new(255, 255, 255);
-
 use crate::common::*;
 
 struct Vec2isize {
@@ -7,7 +5,7 @@ struct Vec2isize {
     pub y: isize,
 }
 
-pub fn render_line(buf: &mut Screen, p0f: Vec2, p1f: Vec2, dotted: bool) { // Pretty much direct translation from https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+pub fn render_line(buf: &mut Screen, p0f: Vec2, p1f: Vec2, dotted: bool, color: Color) { // Pretty much direct translation from https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     let p0 = Vec2isize {
         x: p0f.x.round() as isize,
         y: p0f.y.round() as isize,
@@ -18,20 +16,20 @@ pub fn render_line(buf: &mut Screen, p0f: Vec2, p1f: Vec2, dotted: bool) { // Pr
     };
     if (p1.y - p0.y).abs() < (p1.x - p0.x).abs() {
         if p0.x > p1.x {
-            render_line_low(buf, p1, p0, dotted)
+            render_line_low(buf, p1, p0, dotted, color)
         } else {
-            render_line_low(buf, p0, p1, dotted)
+            render_line_low(buf, p0, p1, dotted, color)
         }
     } else {
         if p0.y > p1.y {
-            render_line_high(buf, p1, p0, dotted)
+            render_line_high(buf, p1, p0, dotted, color)
         } else {
-            render_line_high(buf, p0, p1, dotted)
+            render_line_high(buf, p0, p1, dotted, color)
         }
     }
 }
 
-fn render_line_low(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool) {
+fn render_line_low(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool, color: Color) {
     let mut draw = true;
     let dx = p1.x - p0.x;
     let mut dy = p1.y - p0.y;
@@ -45,7 +43,7 @@ fn render_line_low(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool)
 
     for x in p0.x..p1.x {
         if !dotted || draw {
-            buf.set_pixel(x as usize, y as usize, LINE_COLOR);
+            buf.set_pixel(x as usize, y as usize, color);
         }
         draw = !draw;
         if d > 0 {
@@ -57,7 +55,7 @@ fn render_line_low(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool)
     }
 }
 
-fn render_line_high(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool) {
+fn render_line_high(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool, color: Color) {
     let mut draw = true;
     let mut dx = p1.x - p0.x;
     let dy = p1.y - p0.y;
@@ -71,7 +69,7 @@ fn render_line_high(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool
 
     for y in p0.y..p1.y {
         if !dotted || draw {
-            buf.set_pixel(x as usize, y as usize, LINE_COLOR);
+            buf.set_pixel(x as usize, y as usize, color);
         }
         draw = !draw;
         if d > 0 {
@@ -83,11 +81,11 @@ fn render_line_high(buf: &mut Screen, p0: Vec2isize, p1: Vec2isize, dotted: bool
     }
 }
 
-pub fn render_connected_lines(buf: &mut Screen, points: Vec<Vec2>, connect_last: bool, dotted: bool) {
+pub fn render_connected_lines(buf: &mut Screen, points: Vec<Vec2>, connect_last: bool, dotted: bool, color: Color) {
     for i in 0..points.len()-1 {
-        render_line(buf, points[i], points[i+1], dotted);
+        render_line(buf, points[i], points[i+1], dotted, color);
     }
     if connect_last {
-        render_line(buf, points[points.len()-1], points[0], dotted);
+        render_line(buf, points[points.len()-1], points[0], dotted, color);
     }
 }

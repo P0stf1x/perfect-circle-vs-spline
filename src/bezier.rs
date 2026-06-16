@@ -19,14 +19,14 @@ pub fn debug_bezier(buf: &mut Screen, b: Bezier) {
     }
 }
 
-pub fn render_bezier(buf: &mut Screen, b: Bezier) {
+pub fn render_bezier(buf: &mut Screen, b: Bezier, color: Color) {
     let points = get_bezier_points(b);
     for point in &points {
         let x = point.x.round() as usize;
         let y = point.y.round() as usize;
-        buf.set_pixel(x, y, Color::new(255, 255, 255));
+        buf.set_pixel(x, y, color);
     }
-    render_connected_lines(buf, points, false, false);
+    render_connected_lines(buf, points, false, false, color);
 }
 
 fn get_bezier_points(b: Bezier) -> Vec<Vec2> {
@@ -58,8 +58,8 @@ fn get_bezier_points(b: Bezier) -> Vec<Vec2> {
     return result;
 }
 
-pub fn render_connected_beziers(buf: &mut Screen, points: Vec<Bezier>) {
+pub fn render_connected_beziers(buf: &mut Screen, points: Vec<Bezier>, color: Color) {
     for i in 0..points.len() {
-        render_bezier(buf, points[i]);
+        render_bezier(buf, points[i], color);
     }
 }

@@ -1,20 +1,18 @@
-static FLOOD_FILL_COLOR: Color = Color::new(255, 255, 255);
-
 use crate::{HEIGHT, WIDTH, common::*};
 
-pub fn flood_fill(buf: &mut Screen, x: usize, y: usize) {
+pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color) {
     if x >= WIDTH || y >= HEIGHT { return }
 
     let mut check_queue: Vec<(usize, usize)> = vec![(x, y)];
     let checked_color = buf.get_pixel(x, y);
-    if FLOOD_FILL_COLOR.get_colors() == checked_color.get_colors() { panic!("Checked color == flood fill color") };
+    if color.get_colors() == checked_color.get_colors() { panic!("Checked color == flood fill color") };
 
     loop {
         // get pixel from queue
         if let Some(pixel) = check_queue.pop() {
 
             // fill current pixel
-            buf.set_pixel(pixel.0, pixel.1, FLOOD_FILL_COLOR);
+            buf.set_pixel(pixel.0, pixel.1, color);
 
             // check neighbours
             for (dx, dy) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {

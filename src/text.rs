@@ -1,14 +1,12 @@
-static TEXT_COLOR: Color = Color::new(0, 255, 0);
-
 use phf::phf_map;
 
 use crate::common::*;
 
-pub fn render_text(buf: &mut Screen, text: String, x: usize, y: usize, scale: usize) {
+pub fn render_text(buf: &mut Screen, text: String, x: usize, y: usize, scale: usize, color: Color) {
     let mut x_pos = 0;
     let mut y_pos = 0;
     for char in text.chars() {
-        render_symbol(buf, Symbol::new(char), x + (x_pos * 4 * scale), y + (y_pos * 6 * scale), scale);
+        render_symbol(buf, Symbol::new(char), x + (x_pos * 4 * scale), y + (y_pos * 6 * scale), scale, color);
         if char == '\n' {
             x_pos = 0;
             y_pos += 1;
@@ -18,7 +16,7 @@ pub fn render_text(buf: &mut Screen, text: String, x: usize, y: usize, scale: us
     }
 }
 
-fn render_symbol(buf: &mut Screen, symbol: Symbol, x: usize, y: usize, scale: usize) {
+fn render_symbol(buf: &mut Screen, symbol: Symbol, x: usize, y: usize, scale: usize, color: Color) {
     for rel_y in 0..(5*scale) {
         let pix_y = rel_y/scale; // it's unoptimal to multiply and then right afterwards divide, but that makes code easier which is better for a quick one off project
         let abs_y = rel_y + y;
@@ -26,7 +24,7 @@ fn render_symbol(buf: &mut Screen, symbol: Symbol, x: usize, y: usize, scale: us
             let pix_x = rel_x/scale;
             let abs_x = rel_x + x;
             if symbol.at(pix_x, pix_y) {
-                buf.set_pixel(abs_x, abs_y, TEXT_COLOR);
+                buf.set_pixel(abs_x, abs_y, color);
             }
         }
     }
