@@ -1,0 +1,1 @@
+ffmpeg -framerate 30 -i output/output_%d.ppm output/output.mp4

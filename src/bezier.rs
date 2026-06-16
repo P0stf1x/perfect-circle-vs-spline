@@ -58,7 +58,7 @@ fn get_bezier_points(b: Bezier) -> Vec<Vec2> {
     return result;
 }
 
-pub fn render_connected_beziers(buf: &mut Screen, points: Vec<Bezier>, color: Color) {
+pub fn render_connected_beziers(buf: &mut Screen, points: &Vec<Bezier>, color: Color) {
     for i in 0..points.len() {
         render_bezier(buf, points[i], color);
     }

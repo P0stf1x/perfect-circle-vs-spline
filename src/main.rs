@@ -5,6 +5,10 @@ pub static HEIGHT: usize = 512;
 pub static CIRCLE_SIZE: f64 = 0.8;
 pub static CIRCLE_CENTER: Vec2 = Vec2 { x: (WIDTH as f64)/2., y: (HEIGHT as f64)/2. };
 static BEZIER_QUALITY: usize = 126;
+static FRAMERATE: f64 = 30.;
+static DURATION: f64 = 30.;
+static RADIUS_START: f64 = 0.0;
+static RADIUS_END: f64 = 1.3;
 
 mod common;
 mod text;
@@ -13,6 +17,8 @@ mod bezier;
 mod flood_fill;
 
 use std::f64::consts::TAU;
+use std::fs;
+use std::process::exit;
 
 use crate::common::*;
 use crate::text::render_text;
@@ -20,10 +26,8 @@ use crate::line::*;
 use crate::bezier::*;
 use crate::flood_fill::*;
 
-fn main() {
-    let mut screen = Screen::new();
-    render_text(&mut screen, "The quick brown fox jumps over the lazy dog\n1234567890\ntest: 0.42f".to_string(), 10, 10, 2, Color::new(255, 255, 0));
-
+pub fn render_frame_inplace(buf: &mut Screen, bezier_rounding_percent: f64) {
+    // Common calculations
     let circle_part_rad = TAU/SPLINE_NODES as f64;
     let mut spline_points = Vec::<Vec2>::with_capacity(SPLINE_NODES);
     let mut spline_thetas = Vec::<f64>::with_capacity(SPLINE_NODES);
@@ -43,41 +47,75 @@ fn main() {
     beziers.push(
         Bezier::from_line(spline_points[SPLINE_NODES-1], spline_points[0])
     );
-    // render_connected_lines(&mut screen, spline_points, true, false);
-    // render_connected_beziers(&mut screen, beziers);
-    let test_bez = Bezier {
-
-        p0: Vec2 { x: -150., y:  25.},
-        p1: Vec2 { x:  -50., y: -75.},
-        p2: Vec2 { x:   50., y:  75.},
-        p3: Vec2 { x:  150., y: -25.},
-    };
     let mut circleish_beziers = Vec::<Bezier>::with_capacity(SPLINE_NODES);
     for i in 0..spline_thetas.len()-1 {
         circleish_beziers.push(
-            Bezier::from_tangent(spline_thetas[i], spline_thetas[i+1], 1.1, CIRCLE_RADIUS, CIRCLE_CENTER)
+            Bezier::from_tangent(spline_thetas[i], spline_thetas[i+1], bezier_rounding_percent, CIRCLE_RADIUS, CIRCLE_CENTER)
         );
     }
     circleish_beziers.push(
-        Bezier::from_tangent(spline_thetas[SPLINE_NODES-1], spline_thetas[0], 1.1, CIRCLE_RADIUS, CIRCLE_CENTER)
+        Bezier::from_tangent(spline_thetas[SPLINE_NODES-1], spline_thetas[0], bezier_rounding_percent, CIRCLE_RADIUS, CIRCLE_CENTER)
     );
-    render_connected_beziers(&mut screen, circleish_beziers, Color::new(0, 255, 0));
-    perfect_circle(&mut screen, Color::new(255, 0, 0));
-    render_connected_beziers(&mut screen, beziers, Color::new(0, 0, 255));
-    // render_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
-    // debug_bezier(&mut screen, test_bez.offset(CIRCLE_CENTER));
-    flood_fill(&mut screen, WIDTH/2, HEIGHT/2, Color::new(255, 0, 255));
 
-    screen.render_to_file("result.ppm".to_string());
+    // Outer layer
+    render_connected_beziers(buf, &circleish_beziers, Color::new(255, 0, 0));
+    flood_fill(buf, WIDTH/2, HEIGHT/2, Color::new(255, 0, 0), false);
+
+    // Middle/circle layer
+    render_perfect_circle(buf, Color::new(255, 0, 0));
+
+    // Inner layer
+    render_connected_beziers(buf, &circleish_beziers, Color::new(255, 255, 255));
+    flood_fill(buf, WIDTH/2, HEIGHT/2, Color::new(255, 255, 255), true);
+    render_connected_beziers(buf, &circleish_beziers, Color::new(255, 0, 0)); // re-render them in red to fix cases when bezier is larger than the circle
+
+    // HUD
+    let hud_text = format!(
+        "Average error: {}\nCenter error: {}\nCircle-ness: {:.2}% of radius",
+        "NAN", "NAN", bezier_rounding_percent*100.
+    );
+    render_text(buf, hud_text, 10, 10, 4, Color::new(0, 255, 0));
 }
 
-fn perfect_circle(buf: &mut Screen, color: Color) {
-    for y in 0..(HEIGHT as isize) {
-        for x in 0..(WIDTH as isize) {
-            let inside = (((x-((WIDTH as isize)/2)).pow(2) + (y-((HEIGHT as isize)/2)).pow(2)) as f64).sqrt() < CIRCLE_RADIUS;
-            if inside {
+fn main() {
+    if let Ok(mut dir) = fs::read_dir("output/") {
+        if dir.next().is_some() {
+            println!("output/ directory is not empty!");
+            exit(-1);
+        }
+    }
+    let mut screen = Screen::new();
+
+    let mut roundness_counter = RADIUS_START;
+    let frames_to_render = (FRAMERATE*DURATION).ceil() as usize;
+    let roundness_diff = (RADIUS_END-RADIUS_START)/(frames_to_render-1) as f64;
+    let mut counter = 0;
+
+    println!("Rendering {} images:", frames_to_render);
+
+    while counter < frames_to_render {
+        screen.fill(Color::new(0, 0, 0));
+        render_frame_inplace(&mut screen, roundness_counter);
+        screen.render_to_file(format!("output/output_{}.ppm", counter));
+        roundness_counter += roundness_diff;
+        counter += 1;
+        println!("{}/{}", counter, frames_to_render)
+    }
+}
+
+fn render_perfect_circle(buf: &mut Screen, color: Color) {
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            if is_inside_circle(x, y) {
                 buf.set_pixel(x as usize, y as usize, color);
             };
         }
     }
+}
+
+pub fn is_inside_circle(x: usize, y: usize) -> bool {
+    let x_sq = ((x as isize)-((WIDTH as isize)/2)).pow(2);
+    let y_sq = ((y as isize)-((HEIGHT as isize)/2)).pow(2);
+    let inside = ((x_sq + y_sq) as f64).sqrt() < CIRCLE_RADIUS;
+    return inside;
 }

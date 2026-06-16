@@ -92,4 +92,6 @@ static SYMBOL_ENCODINGS: phf::Map<char, SymbolData> = phf_map! {
     ':' => [ false, false, false,    true, false, false,   false, false, false,    true, false, false,   false, false, false ],
     '.' => [ false, false, false,   false, false, false,   false, false, false,   false, false, false,   false,  true, false ],
     ' ' => [ false, false, false,   false, false, false,   false, false, false,   false, false, false,   false, false, false ],
+    '-' => [ false, false, false,   false, false, false,    true,  true,  true,   false, false, false,   false, false, false ],
+    '%' => [  true, false,  true,   false, false,  true,   false,  true, false,    true, false, false,    true, false,  true ],
 };

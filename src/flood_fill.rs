@@ -1,6 +1,6 @@
-use crate::{HEIGHT, WIDTH, common::*};
+use crate::{HEIGHT, WIDTH, common::*, is_inside_circle};
 
-pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color) {
+pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color, limit_to_circle: bool) {
     if x >= WIDTH || y >= HEIGHT { return }
 
     let mut check_queue: Vec<(usize, usize)> = vec![(x, y)];
@@ -19,6 +19,7 @@ pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color) {
                 let new_x = (pixel.0 as isize) + dx;
                 let new_y = (pixel.1 as isize) + dy;
                 if new_x < 0 || new_y < 0 || new_x >= WIDTH as isize || new_y >= HEIGHT as isize { continue }
+                if limit_to_circle && !is_inside_circle(new_x as usize, new_y as usize) { continue }
                 if buf.get_pixel(new_x as usize, new_y as usize).get_colors() == checked_color.get_colors() {
                     check_queue.push((new_x as usize, new_y as usize));
                 }

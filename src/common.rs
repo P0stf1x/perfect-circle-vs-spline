@@ -51,25 +51,28 @@ impl Screen {
         )
     }
 
+    pub fn fill(&mut self, color: Color) {
+        self.0.fill(color);
+    }
+
     pub fn render_to_file(&mut self, file_name: String) {
         static HEADER_MAGIC_SIZE: usize = 3;
         static HEADER_RESOLUTION_SIZE: usize = 16; // roughly
         let mut write_buf = Vec::<u8>::with_capacity(WIDTH*HEIGHT*4 + HEADER_MAGIC_SIZE + HEADER_RESOLUTION_SIZE);
 
-        write_buf.extend_from_slice(b"P3\n"); // magic
+        write_buf.extend_from_slice(b"P6\n"); // magic
         write_buf.extend_from_slice(format!("{} {}\n", WIDTH, HEIGHT).as_bytes()); // size
         write_buf.extend_from_slice(b"255\n"); // color depth
 
         for y in 0..HEIGHT {
             for x in 0..WIDTH {
-                let (r, g, b) = self.get_pixel(x, y).get_colors();
-                write_buf.extend_from_slice(format!("{} ", r).as_bytes());
-                write_buf.extend_from_slice(format!("{} ", g).as_bytes());
-                write_buf.extend_from_slice(format!("{} ", b).as_bytes());
+                write_buf.push(self.get_pixel(x, y).r());
+                write_buf.push(self.get_pixel(x, y).g());
+                write_buf.push(self.get_pixel(x, y).b());
             }
-            write_buf.extend_from_slice(b"\n");
         }
 
+        fs::create_dir_all("output/").unwrap();
         let mut file_handle = fs::File::create(file_name).unwrap();
         file_handle.write(&write_buf).unwrap();
     }
@@ -133,7 +136,8 @@ impl Bezier {
     pub fn from_tangent(th_p0: f64, th_p3: f64, r_percent: f64, circle_r: f64, offset: Vec2) -> Self {
         let p0 = pol2cart(circle_r, th_p0);
         let p3 = pol2cart(circle_r, th_p3);
-        if r_percent < 0.01 && r_percent > -0.01 { // if smaller than 1% of r
+        let abs_r = r_percent * circle_r;
+        if abs_r.abs() < f64::EPSILON { // f
             let result = Self::from_line(p0, p3);
             return result.offset(offset);
         } else {
