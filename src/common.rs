@@ -1,4 +1,4 @@
-use std::fs;
+use std::{f64::consts::PI, fs};
 use std::io::Write;
 
 use crate::{ WIDTH, HEIGHT, };
@@ -129,6 +129,21 @@ impl Bezier {
         let p2 = lerp(p0, p3, 2./3.);
         return Self { p0, p1, p2, p3 };
     }
+
+    pub fn from_tangent(th_p0: f64, th_p3: f64, r_percent: f64, circle_r: f64, offset: Vec2) -> Self {
+        let p0 = pol2cart(circle_r, th_p0);
+        let p3 = pol2cart(circle_r, th_p3);
+        if r_percent < 0.01 && r_percent > -0.01 { // if smaller than 1% of r
+            let result = Self::from_line(p0, p3);
+            return result.offset(offset);
+        } else {
+            let r = circle_r * r_percent;
+            let p1 = p0.add(circle_tangent_vectors(th_p0, r).0);
+            let p2 = p3.add(circle_tangent_vectors(th_p3, r).1);
+            let result = Self { p0, p1, p2, p3 };
+            return result.offset(offset);
+        }
+    }
 }
 
 pub fn lerp(p0: Vec2, p1: Vec2, t: f64) -> Vec2 {
@@ -138,4 +153,12 @@ pub fn lerp(p0: Vec2, p1: Vec2, t: f64) -> Vec2 {
         y: p0.y + (diff.y as f64 * (1.-t)),
     };
     return result;
+}
+
+pub fn circle_tangent_vectors(th: f64, r: f64) -> (Vec2, Vec2) {
+    let left_th = th + PI/2.;
+    let right_th = th - PI/2.;
+    let left_vector = pol2cart(r, left_th);
+    let right_vector = pol2cart(r, right_th);
+    return (left_vector, right_vector)
 }

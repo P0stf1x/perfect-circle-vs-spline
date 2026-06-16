@@ -21,9 +21,12 @@ pub fn debug_bezier(buf: &mut Screen, b: Bezier) {
 
 pub fn render_bezier(buf: &mut Screen, b: Bezier) {
     let points = get_bezier_points(b);
+    for point in &points {
+        let x = point.x.round() as usize;
+        let y = point.y.round() as usize;
+        buf.set_pixel(x, y, Color::new(255, 255, 255));
+    }
     render_connected_lines(buf, points, false, false);
-    let control_points = vec![b.p0, b.p1, b.p2, b.p3];
-    render_connected_lines(buf, control_points, false, true);
 }
 
 fn get_bezier_points(b: Bezier) -> Vec<Vec2> {

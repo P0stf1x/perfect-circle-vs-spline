@@ -1,4 +1,4 @@
-static LINE_COLOR: Color = Color::new(255, 0, 0);
+static LINE_COLOR: Color = Color::new(255, 255, 255);
 
 use crate::common::*;
 
@@ -9,12 +9,12 @@ struct Vec2isize {
 
 pub fn render_line(buf: &mut Screen, p0f: Vec2, p1f: Vec2, dotted: bool) { // Pretty much direct translation from https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     let p0 = Vec2isize {
-        x: p0f.x as isize,
-        y: p0f.y as isize,
+        x: p0f.x.round() as isize,
+        y: p0f.y.round() as isize,
     };
     let p1 = Vec2isize {
-        x: p1f.x as isize,
-        y: p1f.y as isize,
+        x: p1f.x.round() as isize,
+        y: p1f.y.round() as isize,
     };
     if (p1.y - p0.y).abs() < (p1.x - p0.x).abs() {
         if p0.x > p1.x {
