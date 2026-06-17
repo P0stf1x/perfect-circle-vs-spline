@@ -78,11 +78,17 @@ impl Screen {
     }
 }
 
-pub fn pol2cart(r: f64, th: f64) -> Vec2 {
+pub fn pol2cart(r: &f64, th: &f64) -> Vec2 {
     return Vec2 {
         x: (r * th.cos()),
         y: (r * th.sin()),
     }
+}
+
+pub fn cart2pol(pos: &Vec2) -> (f64, f64) {
+    let r = (pos.x.powi(2) + pos.y.powi(2)).sqrt();
+    let th = (pos.y).atan2(pos.x);
+    return (r, th);
 }
 
 #[derive(Clone, Copy)]
@@ -104,6 +110,13 @@ impl Vec2 {
         Self {
             x: self.x - other.x,
             y: self.y - other.y,
+        }
+    }
+
+    pub fn neg(&self) -> Self {
+        Self {
+            x: -self.x,
+            y: -self.y,
         }
     }
 }
@@ -134,8 +147,8 @@ impl Bezier {
     }
 
     pub fn from_tangent(th_p0: f64, th_p3: f64, r_percent: f64, circle_r: f64, offset: Vec2) -> Self {
-        let p0 = pol2cart(circle_r, th_p0);
-        let p3 = pol2cart(circle_r, th_p3);
+        let p0 = pol2cart(&circle_r, &th_p0);
+        let p3 = pol2cart(&circle_r, &th_p3);
         let abs_r = r_percent * circle_r;
         if abs_r.abs() < f64::EPSILON { // f
             let result = Self::from_line(p0, p3);
@@ -162,7 +175,7 @@ pub fn lerp(p0: Vec2, p1: Vec2, t: f64) -> Vec2 {
 pub fn circle_tangent_vectors(th: f64, r: f64) -> (Vec2, Vec2) {
     let left_th = th + PI/2.;
     let right_th = th - PI/2.;
-    let left_vector = pol2cart(r, left_th);
-    let right_vector = pol2cart(r, right_th);
+    let left_vector = pol2cart(&r, &left_th);
+    let right_vector = pol2cart(&r, &right_th);
     return (left_vector, right_vector)
 }

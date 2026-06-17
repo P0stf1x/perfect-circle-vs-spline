@@ -34,7 +34,7 @@ pub fn render_frame_inplace(buf: &mut Screen, bezier_rounding_percent: f64) {
     for i in 0..SPLINE_NODES {
         let theta = (i as f64) * circle_part_rad;
         spline_thetas.push(theta);
-        let v2 = pol2cart(CIRCLE_RADIUS, theta);
+        let v2 = pol2cart(&CIRCLE_RADIUS, &theta);
         let v2_offseted = v2.add(CIRCLE_CENTER);
         spline_points.push(v2_offseted);
     }
@@ -70,9 +70,19 @@ pub fn render_frame_inplace(buf: &mut Screen, bezier_rounding_percent: f64) {
     render_connected_beziers(buf, &circleish_beziers, Color::new(255, 0, 0)); // re-render them in red to fix cases when bezier is larger than the circle
 
     // HUD
+    let segment_point = &circleish_beziers[0].offset(CIRCLE_CENTER.neg()).get_bezier_points(BEZIER_QUALITY, false);
+    let mut average_sum = 0.;
+    for i in 0..segment_point.len() {
+        let (distance, _) = cart2pol(&segment_point[i]);
+        average_sum += distance;
+    }
+    let average = average_sum/(BEZIER_QUALITY as f64)/CIRCLE_RADIUS;
+    let middle_point = &circleish_beziers[0].offset(CIRCLE_CENTER.neg()).get_bezier_points(1, false)[0];
+    let (center_r, _) = cart2pol(middle_point);
+    let center = center_r/(CIRCLE_RADIUS as f64);
     let hud_text = format!(
-        "Average error: {}\nCenter error: {}\nCircle-ness: {:.2}% of radius",
-        "NAN", "NAN", bezier_rounding_percent*100.
+        "Bezier average radius: {}\nBezier center radius: {}\nCircle-ness: {:.2}% of radius",
+        average, center, bezier_rounding_percent*100.
     );
     render_text(buf, hud_text, 10, 10, 4, Color::new(0, 255, 0));
 }
