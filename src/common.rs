@@ -83,6 +83,9 @@ impl Screen {
     }
 
     pub fn render_to_png(&mut self, file_name: String) { // from docs.rs example
+
+        fs::create_dir_all("output/").unwrap();
+
         // For reading and opening files
         use std::path::Path;
         use std::fs::File;

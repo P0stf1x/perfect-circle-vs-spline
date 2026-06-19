@@ -1,14 +1,17 @@
-static CIRCLE_RADIUS: f64 = (WIDTH as f64) * CIRCLE_SIZE * 0.5;
-static SPLINE_NODES: usize = 8;
-pub static WIDTH:  usize = 512;
-pub static HEIGHT: usize = 512;
+// ===================== CONFIGURATION =====================
+
+pub static WIDTH:  usize = 2048;
+pub static HEIGHT: usize = 2048;
+static FRAMERATE: f64 = 60.;
+static DURATION:  f64 = 60.;
 pub static CIRCLE_SIZE: f64 = 0.8;
-pub static CIRCLE_CENTER: Vec2 = Vec2 { x: (WIDTH as f64)/2., y: (HEIGHT as f64)/2. };
-static BEZIER_QUALITY: usize = 126;
-static FRAMERATE: f64 = 30.;
-static DURATION: f64 = 30.;
-static RADIUS_START: f64 = 0.0;
-static RADIUS_END: f64 = 1.3;
+static BEZIER_COUNT: usize = 8;
+static BEZIER_QUALITY: usize = 510; // amount of in-between points when rendering Beziers
+static BEZIER_START: f64 = 0.0;
+static BEZIER_END:   f64 = 1.3;
+static FONT_SIZE: usize = 10;
+
+// =========================================================
 
 mod common;
 mod text;
@@ -22,39 +25,41 @@ use std::process::exit;
 
 use crate::common::*;
 use crate::text::render_text;
-use crate::line::*;
 use crate::bezier::*;
 use crate::flood_fill::*;
 
+pub static CIRCLE_CENTER: Vec2 = Vec2 { x: (WIDTH as f64)/2., y: (HEIGHT as f64)/2. };
+static CIRCLE_RADIUS: f64 = (WIDTH as f64) * CIRCLE_SIZE * 0.5;
+
 pub fn render_frame_inplace(buf: &mut Screen, bezier_rounding_percent: f64) {
     // Common calculations
-    let circle_part_rad = TAU/SPLINE_NODES as f64;
-    let mut spline_points = Vec::<Vec2>::with_capacity(SPLINE_NODES);
-    let mut spline_thetas = Vec::<f64>::with_capacity(SPLINE_NODES);
-    for i in 0..SPLINE_NODES {
+    let circle_part_rad = TAU/BEZIER_COUNT as f64;
+    let mut spline_points = Vec::<Vec2>::with_capacity(BEZIER_COUNT);
+    let mut spline_thetas = Vec::<f64>::with_capacity(BEZIER_COUNT);
+    for i in 0..BEZIER_COUNT {
         let theta = (i as f64) * circle_part_rad;
         spline_thetas.push(theta);
         let v2 = pol2cart(&CIRCLE_RADIUS, &theta);
         let v2_offseted = v2.add(CIRCLE_CENTER);
         spline_points.push(v2_offseted);
     }
-    let mut beziers = Vec::<Bezier>::with_capacity(SPLINE_NODES);
-    for i in 0..SPLINE_NODES-1 {
+    let mut beziers = Vec::<Bezier>::with_capacity(BEZIER_COUNT);
+    for i in 0..BEZIER_COUNT-1 {
         beziers.push(
             Bezier::from_line(spline_points[i], spline_points[i+1])
         );
     }
     beziers.push(
-        Bezier::from_line(spline_points[SPLINE_NODES-1], spline_points[0])
+        Bezier::from_line(spline_points[BEZIER_COUNT-1], spline_points[0])
     );
-    let mut circleish_beziers = Vec::<Bezier>::with_capacity(SPLINE_NODES);
+    let mut circleish_beziers = Vec::<Bezier>::with_capacity(BEZIER_COUNT);
     for i in 0..spline_thetas.len()-1 {
         circleish_beziers.push(
             Bezier::from_tangent(spline_thetas[i], spline_thetas[i+1], bezier_rounding_percent, CIRCLE_RADIUS, CIRCLE_CENTER)
         );
     }
     circleish_beziers.push(
-        Bezier::from_tangent(spline_thetas[SPLINE_NODES-1], spline_thetas[0], bezier_rounding_percent, CIRCLE_RADIUS, CIRCLE_CENTER)
+        Bezier::from_tangent(spline_thetas[BEZIER_COUNT-1], spline_thetas[0], bezier_rounding_percent, CIRCLE_RADIUS, CIRCLE_CENTER)
     );
 
     // Outer layer
@@ -81,10 +86,10 @@ pub fn render_frame_inplace(buf: &mut Screen, bezier_rounding_percent: f64) {
     let (center_r, _) = cart2pol(middle_point);
     let center = center_r/(CIRCLE_RADIUS as f64);
     let hud_text = format!(
-        "Bezier average radius: {}\nBezier center radius: {}\nCircle-ness: {:.2}% of radius",
+        "Bezier average radius: {}\nBezier center radius: {}\nP1 P2 distance: {:.03}% of radius",
         average, center, bezier_rounding_percent*100.
     );
-    render_text(buf, hud_text, 10, 10, 4, Color::new(0, 255, 0));
+    render_text(buf, hud_text, 10, 10, FONT_SIZE, Color::new(0, 255, 0));
 }
 
 fn main() {
@@ -96,9 +101,9 @@ fn main() {
     }
     let mut screen = Screen::new();
 
-    let mut roundness_counter = RADIUS_START;
+    let mut roundness_counter = BEZIER_START;
     let frames_to_render = (FRAMERATE*DURATION).ceil() as usize;
-    let roundness_diff = (RADIUS_END-RADIUS_START)/(frames_to_render-1) as f64;
+    let roundness_diff = (BEZIER_END-BEZIER_START)/(frames_to_render-1) as f64;
     let mut counter = 0;
 
     println!("Rendering {} images:", frames_to_render);

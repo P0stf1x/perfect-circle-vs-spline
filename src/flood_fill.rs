@@ -5,8 +5,8 @@ pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color, limit_to_c
     flood_fill_algorith(buf, x, y, color, checked_color, limit_to_circle, true, true);
 }
 
-fn flood_fill_algorith(buf: &mut Screen, x: usize, y: usize, color: Color, checked_color: Color, limit_to_circle: bool, check_above: bool, check_below: bool) {
-    if limit_to_circle && !is_inside_circle(x, y) { return }
+fn flood_fill_algorith(buf: &mut Screen, x: usize, y: usize, color: Color, checked_color: Color, limit_to_circle: bool, check_above: bool, check_below: bool) -> (usize, usize) {
+    if limit_to_circle && !is_inside_circle(x, y) { return (x, x) }
 
     let mut left_edge = x;
     while left_edge > 0 && (!limit_to_circle || is_inside_circle(left_edge, y)) {
@@ -26,19 +26,29 @@ fn flood_fill_algorith(buf: &mut Screen, x: usize, y: usize, color: Color, check
 
     // check pixels above for same color
     if check_above && y > 0 {
-        for i in left_edge..=right_edge {
+        let mut i = left_edge;
+        while i <= right_edge {
             if buf.get_pixel_unchecked(i, y-1) == checked_color {
-                flood_fill_algorith(buf, i, y-1, color, checked_color, limit_to_circle, true, false);
+                let (_, fill_up_to) = flood_fill_algorith(buf, i, y-1, color, checked_color, limit_to_circle, true, false);
+                i = fill_up_to + 1;
+            } else {
+                i += 1;
             }
         }
     }
 
     // check pixels below for same color
     if check_below && y < HEIGHT-1 {
-        for i in left_edge..=right_edge {
+        let mut i = left_edge;
+        while i <= right_edge {
             if buf.get_pixel_unchecked(i, y+1) == checked_color {
-                flood_fill_algorith(buf, i, y+1, color, checked_color, limit_to_circle, false, true);
+                let (_, fill_up_to) = flood_fill_algorith(buf, i, y+1, color, checked_color, limit_to_circle, false, true);
+                i = fill_up_to + 1;
+            } else {
+                i += 1;
             }
         }
     }
+
+    return (left_edge, right_edge);
 }

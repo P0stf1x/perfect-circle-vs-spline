@@ -1,1 +1,1 @@
-ffmpeg -framerate 30 -i output/output_%d.ppm output/output.mp4
+ffmpeg -framerate 60 -i output/output_%d.ppm output/output.mp4
