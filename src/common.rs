@@ -4,6 +4,7 @@ use std::io::Write;
 use crate::{ WIDTH, HEIGHT, };
 
 #[derive(Clone, Copy)]
+#[derive(PartialEq, Eq)]
 pub struct Color([u8; 3]);
 
 impl Color {
@@ -66,6 +67,11 @@ impl Screen {
 
     pub fn fill(&mut self, color: Color) {
         self.0.fill(color);
+    }
+
+    pub fn fill_line_unsafe(&mut self, y: usize, x0: usize, x1: usize, color: Color) {
+        let line_offset = y * WIDTH;
+        self.0[line_offset+x0..line_offset+x1].fill(color);
     }
 
     pub fn render_to_file(&mut self, file_name: String, format: RenderFormat) {

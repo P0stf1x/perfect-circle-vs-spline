@@ -126,6 +126,6 @@ fn render_perfect_circle(buf: &mut Screen, color: Color) {
 pub fn is_inside_circle(x: usize, y: usize) -> bool {
     let x_sq = ((x as isize)-((WIDTH as isize)/2)).pow(2);
     let y_sq = ((y as isize)-((HEIGHT as isize)/2)).pow(2);
-    let inside = ((x_sq + y_sq) as f64).sqrt() < CIRCLE_RADIUS;
+    let inside = ((x_sq + y_sq) as f64) < CIRCLE_RADIUS.powi(2);
     return inside;
 }

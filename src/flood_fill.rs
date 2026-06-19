@@ -1,35 +1,44 @@
 use crate::{HEIGHT, WIDTH, common::*, is_inside_circle};
 
 pub fn flood_fill(buf: &mut Screen, x: usize, y: usize, color: Color, limit_to_circle: bool) {
-    if x >= WIDTH || y >= HEIGHT { return }
+    let checked_color = buf.get_pixel(x, y);
+    flood_fill_algorith(buf, x, y, color, checked_color, limit_to_circle, true, true);
+}
 
-    let mut check_queue: Vec<(usize, usize)> = vec![(x, y)];
-    let checked_color = buf.get_pixel_unchecked(x, y);
-    if color.get_colors() == checked_color.get_colors() { panic!("Checked color == flood fill color") };
+fn flood_fill_algorith(buf: &mut Screen, x: usize, y: usize, color: Color, checked_color: Color, limit_to_circle: bool, check_above: bool, check_below: bool) {
+    if limit_to_circle && !is_inside_circle(x, y) { return }
 
-    loop {
-        // get pixel from queue
-        if let Some(pixel) = check_queue.pop() {
+    let mut left_edge = x;
+    while left_edge > 0 && (!limit_to_circle || is_inside_circle(left_edge, y)) {
+        if buf.get_pixel_unchecked(left_edge-1, y) != checked_color { break }
+        left_edge -= 1;
+    }
 
-            // remove duplicate coords added because we split checking the pixel and actual coloring
-            if buf.get_pixel_unchecked(pixel.0, pixel.1).get_colors() == color.get_colors() { continue }
+    let mut right_edge = x;
+    while right_edge < (WIDTH - 1) && (!limit_to_circle || is_inside_circle(right_edge, y)) {
+        if buf.get_pixel_unchecked(right_edge+1, y) != checked_color { break }
+        right_edge += 1;
+    }
 
-            // fill current pixel
-            buf.set_pixel_unchecked(pixel.0, pixel.1, color);
+    buf.fill_line_unsafe(y, left_edge, right_edge, color);
 
-            // check neighbours
-            for (dx, dy) in [(0, -1), (0, 1), (-1, 0), (1, 0)] {
-                let new_x = (pixel.0 as isize) + dx;
-                let new_y = (pixel.1 as isize) + dy;
-                if new_x < 0 || new_y < 0 || new_x >= WIDTH as isize || new_y >= HEIGHT as isize { continue }
-                if limit_to_circle && !is_inside_circle(new_x as usize, new_y as usize) { continue }
-                if buf.get_pixel_unchecked(new_x as usize, new_y as usize).get_colors() == checked_color.get_colors() {
-                    check_queue.push((new_x as usize, new_y as usize));
-                }
+    // check_above and check_below trick wouldn't work in general case, but in this case it works and saves some processing
+
+    // check pixels above for same color
+    if check_above && y > 0 {
+        for i in left_edge..=right_edge {
+            if buf.get_pixel_unchecked(i, y-1) == checked_color {
+                flood_fill_algorith(buf, i, y-1, color, checked_color, limit_to_circle, true, false);
             }
+        }
+    }
 
-        } else {
-            break; // break if pop() returned None (queue ended)
+    // check pixels below for same color
+    if check_below && y < HEIGHT-1 {
+        for i in left_edge..=right_edge {
+            if buf.get_pixel_unchecked(i, y+1) == checked_color {
+                flood_fill_algorith(buf, i, y+1, color, checked_color, limit_to_circle, false, true);
+            }
         }
     }
 }
