@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 phf = { version = "0.13.1", features = ["macros"] }
+png = "0.18.1"

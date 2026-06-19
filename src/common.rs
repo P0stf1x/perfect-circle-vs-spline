@@ -55,7 +55,42 @@ impl Screen {
         self.0.fill(color);
     }
 
-    pub fn render_to_file(&mut self, file_name: String) {
+    pub fn render_to_file(&mut self, file_name: String, format: RenderFormat) {
+        use RenderFormat::*;
+        match format {
+            PPM => self.render_to_ppm(file_name),
+            PNG => self.render_to_png(file_name),
+        }
+    }
+
+    pub fn render_to_png(&mut self, file_name: String) { // from docs.rs example
+        // For reading and opening files
+        use std::path::Path;
+        use std::fs::File;
+        use std::io::BufWriter;
+
+        let path = Path::new(&file_name);
+        let file = File::create(path).unwrap();
+        let ref mut w = BufWriter::new(file);
+
+        let mut encoder = png::Encoder::new(w, WIDTH as u32, HEIGHT as u32); // Width is 2 pixels and height is 1.
+        encoder.set_color(png::ColorType::Rgb);
+        encoder.set_depth(png::BitDepth::Eight);
+        encoder.set_source_gamma(png::ScaledFloat::from_scaled(45455)); // 1.0 / 2.2, scaled by 100000
+        encoder.set_source_gamma(png::ScaledFloat::new(1.0 / 2.2));     // 1.0 / 2.2, unscaled, but rounded
+        let source_chromaticities = png::SourceChromaticities::new(     // Using unscaled instantiation here
+            (0.31270, 0.32900),
+            (0.64000, 0.33000),
+            (0.30000, 0.60000),
+            (0.15000, 0.06000)
+        );
+        encoder.set_source_chromaticities(source_chromaticities);
+        let mut writer = encoder.write_header().unwrap();
+
+        writer.write_image_data(&self.0.iter().flat_map(|c| [c.r(), c.g(), c.b()]).collect::<Vec<_>>()).unwrap(); // Save
+    }
+
+    pub fn render_to_ppm(&mut self, file_name: String) {
         static HEADER_MAGIC_SIZE: usize = 3;
         static HEADER_RESOLUTION_SIZE: usize = 16; // roughly
         let mut write_buf = Vec::<u8>::with_capacity(WIDTH*HEIGHT*4 + HEADER_MAGIC_SIZE + HEADER_RESOLUTION_SIZE);
@@ -76,6 +111,11 @@ impl Screen {
         let mut file_handle = fs::File::create(file_name).unwrap();
         file_handle.write(&write_buf).unwrap();
     }
+}
+
+pub enum RenderFormat {
+    PPM,
+    PNG,
 }
 
 pub fn pol2cart(r: &f64, th: &f64) -> Vec2 {

@@ -106,7 +106,7 @@ fn main() {
     while counter < frames_to_render {
         screen.fill(Color::new(0, 0, 0));
         render_frame_inplace(&mut screen, roundness_counter);
-        screen.render_to_file(format!("output/output_{}.ppm", counter));
+        screen.render_to_file(format!("output/output_{}.png", counter), RenderFormat::PNG);
         roundness_counter += roundness_diff;
         counter += 1;
         println!("{}/{}", counter, frames_to_render)
