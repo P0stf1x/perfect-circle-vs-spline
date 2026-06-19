@@ -25,6 +25,7 @@ impl Color {
         self.0[2]
     }
 
+    #[inline(always)]
     pub fn get_colors(&self) -> (u8, u8, u8) {
         return (self.r(), self.g(), self.b());
     }
@@ -39,8 +40,20 @@ impl Screen {
         self.0[i] = color;
     }
 
+    pub fn set_pixel_unchecked(&mut self, x: usize, y: usize, color: Color) {
+        // if x > WIDTH || y > HEIGHT {panic!("tried setting pixel outside screen border: x:{x} y:{y}")};
+        let i = y*WIDTH + x;
+        self.0[i] = color;
+    }
+
     pub fn get_pixel(&mut self, x: usize, y: usize) -> Color {
         if x > WIDTH || y > HEIGHT {panic!()};
+        let i = y*WIDTH + x;
+        return self.0[i];
+    }
+
+    pub fn get_pixel_unchecked(&mut self, x: usize, y: usize) -> Color {
+        // if x > WIDTH || y > HEIGHT {panic!()};
         let i = y*WIDTH + x;
         return self.0[i];
     }
